@@ -73,7 +73,23 @@ impl Emulator {
 
     // memory配列の指定した番地から8ビットの値を取得する関数
     pub fn get_code8(&self, index: i32) -> u8 {
-        self.memory[(self.eip + index) as usize]
+        
+        let address:usize = if index < 0 {
+            self.eip.wrapping_sub(index as u32) as usize
+        } else {
+            self.eip.wrapping_add(index as u32) as usize
+        };
+        
+        self.memory[address]
+    }
+
+    pub fn get_sign_code8(&self, index: i32) -> i32 {
+        self.memory[(self.eip + index) as usize] as i32
+    }
+
+    
+    pub fn get_code32(&self, index: i32) -> u32 {
+        (0..4).fold(0, |acc, i| acc | (self.get_code8(index + i) << (i * 8)))
     }
 
 
