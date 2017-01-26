@@ -1,6 +1,10 @@
 
 const REGISTERS_COUNT: usize = 8;
 const MEMORY_SIZE: usize = 1024 * 1024;
+const CARRY_FLAG: u32    = 1;
+const ZERO_FLAG: u32     = (1 << 6);
+const SIGN_FLAG: u32     = (1 << 7);
+const OVERFLOW_FLAG: u32 = (1 << 11);
 
 pub enum Register {
     EAX,
@@ -74,24 +78,35 @@ impl Emulator {
     // memory配列の指定した番地から8ビットの値を取得する関数
     pub fn get_code8(&self, index: i32) -> u8 {
         
-        let address:usize = if index < 0 {
-            self.eip.wrapping_sub(index as u32) as usize
-        } else {
-            self.eip.wrapping_add(index as u32) as usize
-        };
-        
-        self.memory[address]
+        self.memory[self.calc_address(self.eip, index)]
     }
 
-    pub fn get_sign_code8(&self, index: i32) -> i32 {
-        self.memory[(self.eip + index) as usize] as i32
+    pub fn calc_address(&self, u: u32, i: i32) -> usize {
+
+        if i < 0 { (u - i as u32) as usize } else { (u + i as u32) as usize }
+    }
+
+    pub fn get_sign_code8(&self, index: i32) -> i8 {
+        self.memory[self.calc_address(self.eip, index)] as i8
     }
 
     
     pub fn get_code32(&self, index: i32) -> u32 {
-        (0..4).fold(0, |acc, i| acc | (self.get_code8(index + i) << (i * 8)))
+        (0..4).fold(0, |acc, i| acc | (self.get_code8(index + i) as u32) << (8 * i))
     }
 
+    pub fn get_sign_code32(&self, index: i32) -> i32 {
+        self.get_code32(index) as i32
+    }
+
+
+    pub fn get_register8(&self, index: i32) -> u8 {
+        if index < 4 {
+            (self.registers[index as usize] & 0xff) as u8
+        } else {
+            ((self.registers[(index - 4) as usize] >> 8) & 0xff) as u8
+        }
+    }
 
     pub fn get_register32(&self, index: u8) -> u32 {
         return self.registers[index as usize];
@@ -121,6 +136,66 @@ impl Emulator {
         }
     }
 
-    
+    pub fn set_carry(&mut self, is_carry: bool) {
+        if is_carry {
+            self.eflags |= CARRY_FLAG;
+        } else {
+            self.eflags &= !CARRY_FLAG; // rustのビット反転は「!」
+        }
+    }
 
+    pub fn set_zero(&mut self, is_zero: bool) {
+        if is_zero {
+            self.eflags |= ZERO_FLAG;
+        } else {
+            self.eflags &= !ZERO_FLAG;
+        }
+    }
+
+    pub fn set_sign(&mut self, is_sign: bool) {
+        if is_sign {
+            self.eflags |= SIGN_FLAG;
+        } else {
+            self.eflags &= !SIGN_FLAG;
+        }
+    }
+
+    pub fn set_overflow(&mut self, is_overflow: bool) {
+        if is_overflow {
+            self.eflags |= OVERFLOW_FLAG;
+        } else {
+            self.eflags &= !OVERFLOW_FLAG;
+        }
+    }
+
+
+    pub fn is_carry(&self) -> bool {
+        (self.eflags & CARRY_FLAG) != 0
+    }
+
+    pub fn is_zero(&self) -> bool {
+        (self.eflags & ZERO_FLAG) != 0
+    }    
+
+    pub fn is_sign(&self) -> bool {
+        (self.eflags & SIGN_FLAG) != 0
+    }
+
+    pub fn is_overflow(&self) -> bool {
+        (self.eflags & OVERFLOW_FLAG) != 0
+    }
+
+
+    pub fn update_eflags_sub(&mut self, v1: u32, v2: u32, result: u64) {
+
+        let sign1: u32 = v1 >> 31;           // v1の31ビット目
+        let sign2: u32 = v2 >> 31;           // v2の31ビット目
+        let signr: u64 = (result >> 31) & 1; // resultの31ビット目
+
+        self.set_carry((result >> 32) != 0);
+        self.set_zero(result == 0);
+        self.set_sign(signr == 1);
+        self.set_overflow(sign1 != sign2 && sign1 != signr as u32);
+        
+    }
 }
