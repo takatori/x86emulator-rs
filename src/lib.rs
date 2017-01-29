@@ -1,6 +1,6 @@
 #![feature(associated_consts)]
 
-mod emulator;
-mod instruction;
-mod io;
-mod modrm;
+pub mod emulator;
+pub mod instruction;
+pub mod io;
+pub mod modrm;

@@ -1,8 +1,9 @@
+
 use std::process;
 
+use emulator::Emulator;
 
 pub struct ModRM {
-
     _mod: u8,
     reg:  u8,
     rm:   u8,
@@ -24,24 +25,24 @@ impl ModRM {
         }
     }
 
-    pub fn opecode() -> u8 {
+    pub fn opecode(&self) -> u8 {
         self.reg
     }
 
-    pub fn reg_index() -> u8 {
+    pub fn reg_index(&self) -> u8 {
         self.reg
     }
 
-    pub fn disp8() -> i8 {
+    pub fn disp8(&self) -> i8 {
         self.disp as i8
     }
 
-    pub fn disp32() -> u32 {
+    pub fn disp32(&self) -> u32 {
         self.disp
     }
     
 
-    pub fn parse_modrm(&mut self, emu: &Emulator) {
+    pub fn parse_modrm(&mut self, emu: &mut Emulator) {
 
         let code: u8 = emu.get_code8(0);
         
@@ -49,22 +50,22 @@ impl ModRM {
         self.reg  = (code & 0x38) >> 3;
         self.rm   = (code & 0x07);
 
-        self.eip += 1;
+        emu.eip += 1;
 
         if self._mod != 3 && self.rm == 4 {
             self.sib = emu.get_code8(0);
-            self.eip += 1;
+            emu.eip += 1;
         }
         
-        if (self._mod == 0 && self.rm == 5) || self.mod == 2 {
-            self.disp = emu.get_sign_code32(0);
+        if (self._mod == 0 && self.rm == 5) || self._mod == 2 {
+            self.disp = emu.get_sign_code32(0) as u32;
         } else if self._mod == 1 {
-            self.disp = emu.get_sign_code8(0);
-            self.eip += 1;
+            self.disp = emu.get_sign_code8(0) as u32;
+            emu.eip += 1;
         }
     }
 
-    pub fn calc_memory_address(&self, emu: &Emulator) {
+    pub fn calc_memory_address(&self, emu: &mut Emulator) -> u32 {
         
         if self._mod == 0 {
             if self.rm == 4 {
@@ -82,7 +83,7 @@ impl ModRM {
             } else {
                 emu.get_register32(self.rm) + self.disp8()
             }
-        } else if self.mod == 2 {
+        } else if self._mod == 2 {
             if self.rm == 4 {
                 println!("not implemented ModRM mod = 2, rm = 4");
                 process::exit(0);                                
@@ -99,7 +100,7 @@ impl ModRM {
         if self._mod == 3 {
             emu.get_register8(self.rm)
         } else {
-            let address: u32 = self.calc_memory_address(emu);
+            let address: u32 = self.calc_memory_address(&mut emu);
             emu.get_memory8(address)
         }
     }
@@ -108,7 +109,7 @@ impl ModRM {
         if self._mod == 3 {
             emu.set_register8(self.rm, value);
         } else {
-            let address: u32 = self.calc_memory_address(emu);
+            let address: u32 = self.calc_memory_address(&mut emu);
             emu.set_memory8(address, value);
         }
     }
@@ -117,17 +118,17 @@ impl ModRM {
         if self._mod == 3 {
             emu.get_register32(self.rm)
         } else {
-            let address: u32 = self.calc_memory_address(emu);
-            emu.get_memmory32(address)
+            let address: u32 = self.calc_memory_address(&mut emu);
+            emu.get_memory32(address)
         }
     }
     
     pub fn set_rm32(&self, emu: &Emulator, value: u32) {
         if self._mod == 3 {
-            emu.set_register32(self.rm, vlaue)
+            emu.set_register32(self.rm, value)
         } else {
-            let address: u32 = self.calc_memory_address(emu);
-            self.set_memory32(address, value);
+            let address: u32 = self.calc_memory_address(&mut emu);
+            emu.set_memory32(address, value);
         }
     }
 

@@ -30,19 +30,19 @@ impl Register {
     // pub const BH: Register = BL + 4;
 }
 
-struct Emulator {
+pub struct Emulator {
 
     // 汎用レジスタ
-    registers: [u32; REGISTERS_COUNT],     // 本当は[u32; Register::REGISTERS_COUNT],のようにしたいが、unresolved path in constant expressionになる
+    pub registers: [u32; REGISTERS_COUNT],     // 本当は[u32; Register::REGISTERS_COUNT],のようにしたいが、unresolved path in constant expressionになる
 
     // EFLAGSレジスタ
-    eflags: u32,
+    pub eflags: u32,
 
     // メモリ
-    memory: [u8; MEMORY_SIZE], // 生ポインタを使用する -> 配列で宣言する
+    pub memory: [u8; MEMORY_SIZE], // 生ポインタを使用する -> 配列で宣言する
 
     // プログラムカウンタ
-    eip: u32,
+    pub eip: u32,
         
 }
 
@@ -100,7 +100,7 @@ impl Emulator {
     }
 
 
-    pub fn get_register8(&self, index: i32) -> u8 {
+    pub fn get_register8(&self, index: u8) -> u8 {
         if index < 4 {
             (self.registers[index as usize] & 0xff) as u8
         } else {
@@ -108,10 +108,20 @@ impl Emulator {
         }
     }
 
-    pub fn get_register32(&self, index: u8) -> u32 {
-        return self.registers[index as usize];
+    pub fn set_register8(&mut self, index: u8, value: u8) {
+        if index < 4 {
+            let r: u32 = self.registers[index as usize] & 0xffffff00;
+            self.registers[index as usize] = r | value as u32;
+        } else {
+            let r: u32 = self.registers[(index - 4) as usize] & 0xffff00ff;
+            self.registers[(index - 4) as usize] = r | ((value as u32) << 8);
+        }
     }
 
+    pub fn get_register32(&self, index: u8) -> u32 {
+
+        return self.registers[index as usize];
+    }
 
     pub fn set_register32(&mut self, index: u8, value: u32) {
         self.registers[index as usize] = value;
@@ -126,13 +136,13 @@ impl Emulator {
         (0..4).fold(0, |acc, i| acc | (self.get_memory8(address + i) as u32) << (8 * i))
     }
 
-     fn set_memory8(&mut self, address: u32, value: u32) {
-        self.memory[address as usize] = (value & 0xFF) as u8 // u32からu8へのキャストは頭を切り詰められる
+    pub fn set_memory8(&mut self, address: u32, value: u8) {
+        self.memory[address as usize] = value & 0xFF
     }
 
     pub fn set_memory32(&mut self, address: u32, value: u32) {
         for i in 0..4 {
-            self.set_memory8(address + i, value >> (i * 8))
+            self.set_memory8(address + i, (value >> (i * 8)) as u8)
         }
     }
 
