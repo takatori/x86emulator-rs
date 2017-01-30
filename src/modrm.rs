@@ -81,7 +81,7 @@ impl ModRM {
                 println!("not implemented ModRM mod = 1, rm = 4");
                 process::exit(0);                
             } else {
-                emu.get_register32(self.rm) + self.disp8()
+                emu.get_register32(self.rm) + self.disp8() as u32 // TODO: 引き算できるようにする
             }
         } else if self._mod == 2 {
             if self.rm == 4 {
@@ -96,38 +96,38 @@ impl ModRM {
         }
     }
 
-    pub fn get_rm8(&self, emu: &Emulator) -> u8 {
+    pub fn get_rm8(&self, mut emu: &mut Emulator) -> u8 {
         if self._mod == 3 {
             emu.get_register8(self.rm)
         } else {
-            let address: u32 = self.calc_memory_address(&mut emu);
+            let address: u32 = self.calc_memory_address(emu);
             emu.get_memory8(address)
         }
     }
 
-    pub fn set_rm8(&self, emu: &Emulator, value: u8) {
+    pub fn set_rm8(&self, emu: &mut Emulator, value: u8) {
         if self._mod == 3 {
             emu.set_register8(self.rm, value);
         } else {
-            let address: u32 = self.calc_memory_address(&mut emu);
+            let address: u32 = self.calc_memory_address(emu);
             emu.set_memory8(address, value);
         }
     }
 
-    pub fn get_rm32(&self, emu: &Emulator) -> u32 {
+    pub fn get_rm32(&self, emu: &mut Emulator) -> u32 {
         if self._mod == 3 {
             emu.get_register32(self.rm)
         } else {
-            let address: u32 = self.calc_memory_address(&mut emu);
+            let address: u32 = self.calc_memory_address(emu);
             emu.get_memory32(address)
         }
     }
     
-    pub fn set_rm32(&self, emu: &Emulator, value: u32) {
+    pub fn set_rm32(&self, emu: &mut Emulator, value: u32) {
         if self._mod == 3 {
             emu.set_register32(self.rm, value)
         } else {
-            let address: u32 = self.calc_memory_address(&mut emu);
+            let address: u32 = self.calc_memory_address(emu);
             emu.set_memory32(address, value);
         }
     }
@@ -136,7 +136,7 @@ impl ModRM {
         emu.get_register8(self.reg)
     }
 
-    pub fn set_r8(&self, emu: &Emulator, value: u8) {
+    pub fn set_r8(&self, emu: &mut Emulator, value: u8) {
         emu.set_register8(self.reg, value);
     }
 
@@ -144,7 +144,7 @@ impl ModRM {
         emu.get_register32(self.reg)
     }
     
-    pub fn set_r32(&self, emu: &Emulator, value: u32) {
+    pub fn set_r32(&self, emu: &mut Emulator, value: u32) {
         emu.set_register32(self.reg, value);
     }
 }
