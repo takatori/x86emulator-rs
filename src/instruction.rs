@@ -52,8 +52,23 @@ pub fn ret(emu: &mut Emulator) {
     emu.eip += emu.pop32();
 }
 
-
 pub fn add_rm32_imm8(emu: &mut Emulator, modrm: &ModRM) {
     let rm32: u32 = emu.get_rm32(modrm);
     let imm8: u32 = emu.get_sign_code8(0) as i32;
+}
+
+pub fn add_rm32_r32(emu: &mut Emulator, modrm: &ModRM) {
+    emu.eip += 1;
+    emu.parse_modrm(emu, modrm);
+    let r32: u32 = emu.get_r32(modrm);
+    let rm32: u32 = emu.get_rm32(modrm);
+    emu.set_rm32(modrm, rm32 + r32);
+}
+
+pub fn sub_rm32_imm8(emu: &mut Emulator, modrm: &ModRM) {
+    let rm32: u32 = emu.get_rm32(modrm);
+    let imm8: u32 = emu.get_sign_code8(0);
+    emu.eip += 1;
+    emu.set_rm32(modrm, result);
+    emu.update_eflags_sub(rm32, imm8, result);
 }
