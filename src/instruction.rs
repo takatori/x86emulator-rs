@@ -72,3 +72,14 @@ pub fn sub_rm32_imm8(emu: &mut Emulator, modrm: &ModRM) {
     emu.set_rm32(modrm, result);
     emu.update_eflags_sub(rm32, imm8, result);
 }
+
+
+pub fn cmp_r32_rm32(emu: &Emulator) {
+    emu.eip += 1;
+    let modrm: ModRM = ModRM::new();
+    modrm.parse_modrm(emu);
+    let r32: u32  = emu.get_r32(modrm);
+    let rm32: u32 = emu.get_rm32(modrm);
+    let result: u64 = r32 as u64 - rm32 as u64;
+    emu.update_eflags_sub(r32, rm32, result);
+}
