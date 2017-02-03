@@ -53,33 +53,36 @@ pub fn ret(emu: &mut Emulator) {
 }
 
 pub fn add_rm32_imm8(emu: &mut Emulator, modrm: &ModRM) {
-    let rm32: u32 = emu.get_rm32(modrm);
-    let imm8: u32 = emu.get_sign_code8(0) as i32;
+    let rm32: u32 = modrm.get_rm32(emu);
+    let imm8: u32 = emu.get_sign_code8(0) as u32; // as i32; ?????
+    emu.eip += 1;
+    modrm.set_rm32(emu, rm32 + imm8);
 }
 
-pub fn add_rm32_r32(emu: &mut Emulator, modrm: &ModRM) {
+pub fn add_rm32_r32(emu: &mut Emulator, modrm: &mut ModRM) {
     emu.eip += 1;
-    emu.parse_modrm(emu, modrm);
-    let r32: u32 = emu.get_r32(modrm);
-    let rm32: u32 = emu.get_rm32(modrm);
-    emu.set_rm32(modrm, rm32 + r32);
+    modrm.parse_modrm(emu);
+    let r32: u32 = modrm.get_r32(emu);
+    let rm32: u32 = modrm.get_rm32(emu);
+    modrm.set_rm32(emu, rm32 + r32);
 }
 
 pub fn sub_rm32_imm8(emu: &mut Emulator, modrm: &ModRM) {
-    let rm32: u32 = emu.get_rm32(modrm);
-    let imm8: u32 = emu.get_sign_code8(0);
+    let rm32: u32 = modrm.get_rm32(emu);
+    let imm8: u32 = emu.get_sign_code8(0) as u32; // ?????
     emu.eip += 1;
-    emu.set_rm32(modrm, result);
+    let result: u64 = rm32 as u64 - imm8 as u64;
+    modrm.set_rm32(emu, result as u32); // ???? オーバーフロー対策っぽい
     emu.update_eflags_sub(rm32, imm8, result);
 }
 
 
-pub fn cmp_r32_rm32(emu: &Emulator) {
+pub fn cmp_r32_rm32(emu: &mut Emulator) {
     emu.eip += 1;
-    let modrm: ModRM = ModRM::new();
+    let mut modrm: ModRM = ModRM::new();
     modrm.parse_modrm(emu);
-    let r32: u32  = emu.get_r32(modrm);
-    let rm32: u32 = emu.get_rm32(modrm);
+    let r32: u32  = modrm.get_r32(emu);
+    let rm32: u32 = modrm.get_rm32(emu);
     let result: u64 = r32 as u64 - rm32 as u64;
     emu.update_eflags_sub(r32, rm32, result);
 }
