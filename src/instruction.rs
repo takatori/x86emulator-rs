@@ -110,3 +110,36 @@ pub fn code83(emu: &mut Emulator) {
     }
     
 }
+
+pub fn inc_rm32(emu: &Emulator, modrm: &ModRM) {
+    let value: u32 = modrm.get_rm32(emu);
+    modrm.set_rm32(emu, value + 1);
+}
+
+
+pub fn code_off(emu: &Emulator) {
+    emu.eip += 1;
+    let mut modrm: ModRM = ModRM::new();
+    modrm.parse_modrm(emu);
+    
+    match modrm.opecode {
+        0 => inc_rm32(emu, &modrm);
+        _ => { println!("not implemented: FF /{}", modrm.opecode()); process::exit(1); }
+    }
+}
+
+pub fn mov_r32_imm32(emu: &mut Emulator) {
+    let reg: u8 =  emu.get_code8(0) - 0xB8;
+    let value: u32 = emu.get_code32(1);
+    emu.registers[reg as usize] = values;
+    emu.eip += 5;
+}
+
+
+pub fn mov_r8_rm8(emu: &mut Emulator) {
+    emu.eip += 1;
+    let mut modrm: ModRM = ModRM::new();
+    modrm.parse_modrm(emu);
+    let rm8: u32 = emu.get_rm8(modrm);
+    modrm.set_r8(emu, rm8);
+}
