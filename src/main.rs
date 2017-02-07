@@ -1,6 +1,6 @@
 extern crate x86emulator_rs;
 
-use emulator::Emulator;
+use x86emulator_rs::emulator::Emulator;
 
 enum registers_name {
     EAX,
