@@ -152,3 +152,12 @@ pub fn mov_r32_rm32(emu: &mut Emulator) {
     let rm32: u32 = emu.get_rm32(modrm);
     modrm.set_r32(emu, rm32);
 }
+
+
+pub fn mov_rm32_r32(emu: &mut Emulator) {
+    emu.eip += 1;
+    let mut modrm: ModRM = ModRM::new();
+    modrm.parse_modrm(emu);
+    let r32: u32 = emu.get_r32(modrm);
+    modrm.set_rm32(emu, r32);
+}
