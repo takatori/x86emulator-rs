@@ -189,5 +189,9 @@ pub fn mov_rm32_r32(emu: &mut Emulator) {
 }
 
 
+pub fn short_jump(emu: &mut Emulator) {
+    let diff: i8 = emu.get_sign_code8(1);
+    emu.eip += (diff + 2);
+}
 
 
