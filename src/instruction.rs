@@ -162,11 +162,27 @@ pub fn mov_rm32_r32(emu: &mut Emulator) {
     modrm.set_rm32(emu, r32);
 }
 
-
-
 pub fn short_jump(emu: &mut Emulator) {
     let diff: i8 = emu.get_sign_code8(1);
     emu.eip += (diff + 2) as u32;
 }
 
+pub fn near_jump(emu: &mut Emulator) {
+    let diff: i32 = emu.get_sign_code32(1);
+    emu.eip += (diff + 5) as u32;
+}
 
+
+macro_rules! define_jx {
+    ($flag:ident, $is_flag:expr) => (
+        pub fn j$flag(emu: &mut Emulator) {
+            let diff: i32 = $is_flag(emu) ? emu.get_sign_code8(1) : 0;
+            emu.eip += (diff + 2);
+        }
+
+        pub fn jn$flag(emu: &mut Emulator) {
+            let diff: i32 = $is_flag(emu) ? 0 : emu.get_sign_code8(1);
+            emu.eip += (diff + 2);
+        }
+    )
+}
