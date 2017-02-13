@@ -174,7 +174,9 @@ pub fn near_jump(emu: &mut Emulator) {
 
 
 macro_rules! define_jx {
-    ($flag:ident, $is_flag:expr) => (
+    
+    ($flag:ident, $is_flag:ident) => (
+        
         pub fn j$flag(emu: &mut Emulator) {
             let diff: i32 = $is_flag(emu) ? emu.get_sign_code8(1) : 0;
             emu.eip += (diff + 2);
@@ -185,4 +187,17 @@ macro_rules! define_jx {
             emu.eip += (diff + 2);
         }
     )
+        
+}
+
+define_jx!(c, is_carry);
+define_jx!(z, is_zero);
+define_jx!(s, is_sign);
+define_jx!(o, is_overflow);
+
+
+pub fn jl(emu: &mut Emulator) {
+    
+    let diff: i8 = if is_sign(emu) != is_overflow(emu) { emu.get_sign_code8(1) } else { 0 };
+    emu.eip += (diff + 2);
 }
