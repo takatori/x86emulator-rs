@@ -197,7 +197,12 @@ define_jx!(o, is_overflow);
 
 
 pub fn jl(emu: &mut Emulator) {
-    
     let diff: i8 = if is_sign(emu) != is_overflow(emu) { emu.get_sign_code8(1) } else { 0 };
+    emu.eip += (diff + 2);
+}
+
+
+pub fn jle(emu: &mut Emulator) {
+    let diff: i8 = if is_zero(emu) || is_sign(emu) != is_overflow(emu) { emu.get_sign_code8(1) } else {0};
     emu.eip += (diff + 2);
 }
