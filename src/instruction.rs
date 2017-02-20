@@ -178,8 +178,75 @@ pub fn jl(emu: &mut Emulator) {
     emu.eip += (diff + 2);
 }
 
-
 pub fn jle(emu: &mut Emulator) {
     let diff: i8 = if is_zero(emu) || is_sign(emu) != is_overflow(emu) { emu.get_sign_code8(1) } else {0};
     emu.eip += (diff + 2);
 }
+
+
+pub fn swi(emu: &mut Emulator) {
+
+    let int_index: u8 = emu.get_code8(1);
+    emu.eip += 2;
+
+    match int_index {
+        0x10 => bios_video(emu); // todo
+        _ => println!("unknown interrupt: 0x{}", int_index); // todo
+    }
+}
+
+
+pub fn in_al_dx(emu: &Emulator) {
+    let address: u16 = emu.get_register32(Registers::EDX) & 0xffff;
+    let value: u8 = io_in8(address);
+    emu.set_register8(AL, value);
+    emu.eip += 1;
+}
+
+
+pub fn out_dx_al(emu: &mut Emulator) {
+    let address: u16 = emu.get_register32(EDX) & 0xffff;
+    let value: u8 = emu.get_register8(AL);
+    io_out8(address, value);
+    emu.eip += 1;
+
+}
+
+
+pub fn mov_r8_imm8(emu: &mut Emulator) {
+    let reg: u8 = emu.get_code8(0) - 0xB0;
+    emu.set_register8(reg, emu.get_code8(1));
+    emu.eip += 2;
+}
+
+
+pub fn mov_rm8_r8(emu: &mut Emulator) {
+    emu.eip += 1;
+    let modrm: ModRM = ModRM::new();
+    modrm.parse_modrm(emu);
+    let r8: u32 = emu.get_r8(&modrm);
+    emu.set_rm8(&modrm, r8);
+}
+
+pub fn cmp_al_imm8(emu: &Emulator) {
+    let value: u8 = emu.get_code8(1);
+    let al: u8 = emu.get_register32(AL);
+    let result: u64 = al - value;
+    emu.update_eflags_sub(al, value, result);
+    emu.eip += 2;
+}
+
+pub fn cmp_eax_imm32(emu: &mut Emulator) {
+    let value: u32 = emu.get_code32(1);
+    let eax: u32 = emu.get_register32(EAX);
+    let result: u64 = eax as u64 - value as u64;
+    emu.update_efalg_sub(eax, value, result);
+    emu.eip += 5;
+}
+
+pub fn inc_r32(emu: &mut Emulator) {
+    let reg: u8 = emu.get_code8(0) - 0x40;
+    emu.set_register32(reg, emu.get_register32(reg) + 1);
+    emu.eip += 1;
+}
+    
