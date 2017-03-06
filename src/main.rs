@@ -10,29 +10,21 @@ enum registers_name {
     ESP,
     EBP,
     ESI,
-    EDI
+    EDI,
 }
 
 const MEMORY_SIZE: i32 = 1024 * 1024;
 
 
-fn read_binary(emu: &Emulator, filename: &str) {
-    
-}
+fn read_binary(emu: &Emulator, filename: &str) {}
 
-fn dump_registers(emu: &Emulator) {
-    
-}
+fn dump_registers(emu: &Emulator) {}
 
 
-fn create_emu(size: usize, eip: u32, esp: u32) -> Emulator {
-    
-}
+fn create_emu(size: usize, eip: u32, esp: u32) -> Emulator {}
 
 
-fn destroy_emu(emu: &Emulator) {
-    
-}
+fn destroy_emu(emu: &Emulator) {}
 
 
 
